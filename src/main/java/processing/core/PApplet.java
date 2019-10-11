@@ -155,7 +155,7 @@ public class PApplet implements PConstants {
     String osname = System.getProperty("os.name");
 
     if (osname.indexOf("Mac") != -1) {
-      platform = MACOSX;
+      platform = MACOS;
 
     } else if (osname.indexOf("Windows") != -1) {
       platform = WINDOWS;
@@ -281,6 +281,9 @@ public class PApplet implements PConstants {
    * @see PApplet#get(int, int, int, int)
    * @see PApplet#set(int, int, int)
    * @see PImage
+   * @see PApplet#pixelDensity()
+   * @see PApplet#pixelWidth
+   * @see PApplet#pixelHeight
    */
   public int[] pixels;
 
@@ -978,7 +981,7 @@ public class PApplet implements PConstants {
     // be called, conjuring up the demons of various rendering configurations.
     settings();
 
-    if (display == SPAN && platform == MACOSX) {
+    if (display == SPAN && platform == MACOS) {
       // Make sure "Displays have separate Spaces" is unchecked
       // in System Preferences > Mission Control
       Process p = exec("defaults", "read", "com.apple.spaces", "spans-displays");
@@ -1155,7 +1158,7 @@ public class PApplet implements PConstants {
   * @param display the display number to check
   */
   public int displayDensity(int display) {
-    if (PApplet.platform == PConstants.MACOSX) {
+    if (PApplet.platform == PConstants.MACOS) {
       // This should probably be reset each time there's a display change.
       // A 5-minute search didn't turn up any such event in the Java 7 API.
       // Also, should we use the Toolkit associated with the editor window?
@@ -1214,7 +1217,8 @@ public class PApplet implements PConstants {
  /**
   * @webref environment
   * @param density 1 or 2
-  *
+  * @see PApplet#pixelWidth
+  * @see PApplet#pixelHeight
   */
   public void pixelDensity(int density) {
     //println(density + " " + this.pixelDensity);
@@ -2004,6 +2008,9 @@ public class PApplet implements PConstants {
    * @param height height of the display window in units of pixels
    * @see PApplet#width
    * @see PApplet#height
+   * @see PApplet#setup()
+   * @see PApplet#settings()
+   * @see PApplet#fullScreen()
    */
   public void size(int width, int height) {
     // Check to make sure the width/height have actually changed. It's ok to
@@ -2689,7 +2696,7 @@ public class PApplet implements PConstants {
     int button = event.getButton();
 
     // If running on Mac OS, allow ctrl-click as right mouse.
-    if (PApplet.platform == PConstants.MACOSX && event.getButton() == PConstants.LEFT) {
+    if (PApplet.platform == PConstants.MACOS && event.getButton() == PConstants.LEFT) {
       if (action == MouseEvent.PRESS && event.isControlDown()) {
         macosxLeftButtonWithCtrlPressed = true;
       }
@@ -3030,8 +3037,8 @@ public class PApplet implements PConstants {
       // embedded inside an application that has its own close behavior.
       if (external &&
           event.getKeyCode() == 'W' &&
-          ((event.isMetaDown() && platform == MACOSX) ||
-           (event.isControlDown() && platform != MACOSX))) {
+          ((event.isMetaDown() && platform == MACOS) ||
+           (event.isControlDown() && platform != MACOS))) {
         // Can't use this native stuff b/c the native event might be NEWT
 //      if (external && event.getNative() instanceof java.awt.event.KeyEvent &&
 //          ((java.awt.event.KeyEvent) event.getNative()).getModifiers() ==
@@ -3497,7 +3504,7 @@ public class PApplet implements PConstants {
       // in the user.dir part of the url
       params = new String[] { "cmd", "/c" };
 
-    } else if (platform == MACOSX) {
+    } else if (platform == MACOS) {
       params = new String[] { "open" };
 
     } else if (platform == LINUX) {
@@ -3834,7 +3841,7 @@ public class PApplet implements PConstants {
       handleMethods("dispose");
     }
 
-    if (platform == MACOSX) {
+    if (platform == MACOS) {
       try {
         final String td = "processing.core.ThinkDifferent";
         final Class<?> thinkDifferent = getClass().getClassLoader().loadClass(td);
@@ -5258,11 +5265,12 @@ public class PApplet implements PConstants {
   /**
    * ( begin auto-generated from noise.xml )
    *
-   * Returns the Perlin noise value at specified coordinates.Perlin noise is
- a random sequence generator producing a more natural ordered, harmonic
- succession of numbers compared to the standard <b>random()</b> function. It was invented by Ken Perlin in the 1980s and been used since in
- graphical applications to produce procedural textures, natural motion,
- shapes, terrains etc.<br /><br /> The main difference to the
+   * Returns the Perlin noise value at specified coordinates. Perlin noise is
+   * a random sequence generator producing a more natural ordered, harmonic
+   * succession of numbers compared to the standard <b>random()</b> function.
+   * It was invented by Ken Perlin in the 1980s and been used since in
+   * graphical applications to produce procedural textures, natural motion,
+   * shapes, terrains etc.<br /><br /> The main difference to the
    * <b>random()</b> function is that Perlin noise is defined in an infinite
    * n-dimensional space where each pair of coordinates corresponds to a
    * fixed semi-random value (fixed only for the lifespan of the program).
@@ -5285,7 +5293,6 @@ public class PApplet implements PConstants {
    *
    * ( end auto-generated )
    *
-   * @return 
    * @webref math:random
    * @param x x-coordinate in noise space
    * @param y y-coordinate in noise space
@@ -5306,7 +5313,7 @@ public class PApplet implements PConstants {
       // [toxi 031112]
       // noise broke due to recent change of cos table in PGraphics
       // this will take care of it
-      perlin_cosTable = PGraphics.COS_LUT;
+      perlin_cosTable = PGraphics.cosLUT;
       perlin_TWOPI = perlin_PI = PGraphics.SINCOS_LENGTH;
       perlin_PI >>= 1;
     }
@@ -5361,7 +5368,7 @@ public class PApplet implements PConstants {
   }
 
   // [toxi 031112]
-  // now adjusts to the size of the COS_LUT used via
+  // now adjusts to the size of the cosLUT used via
   // the new variables, defined above
   private float noise_fsc(float i) {
     // using bagel's cosine table instead
@@ -6671,7 +6678,7 @@ public class PApplet implements PConstants {
           (sketch.g instanceof PGraphicsOpenGL) && (platform == WINDOWS);
         if (hide) sketch.surface.setVisible(false);
 
-        if (platform == MACOSX && useNativeSelect != false) {
+        if (platform == MACOS && useNativeSelect != false) {
           FileDialog fileDialog =
             new FileDialog(parentFrame, prompt, FileDialog.LOAD);
           if (defaultSelection != null) {
@@ -7960,7 +7967,7 @@ public class PApplet implements PConstants {
 
       // Workaround for bug in Java for OS X from Oracle (7u51)
       // https://github.com/processing/processing/issues/2181
-      if (platform == MACOSX) {
+      if (platform == MACOS) {
         if (jarPath.contains("Contents/Java/")) {
           String appPath = jarPath.substring(0, jarPath.indexOf(".app") + 4);
           File containingFolder = new File(appPath).getParentFile();
@@ -9251,7 +9258,7 @@ public class PApplet implements PConstants {
   static Pattern matchPattern(String regexp) {
     Pattern p = null;
     if (matchPatterns == null) {
-      matchPatterns = new LinkedHashMap<String, Pattern>(16, 0.75f, true) {
+      matchPatterns = new LinkedHashMap<>(16, 0.75f, true) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, Pattern> eldest) {
           // Limit the number of match patterns at 10 most recently used
@@ -10850,7 +10857,7 @@ public class PApplet implements PConstants {
       }
     }
 
-    if (platform == MACOSX) {
+    if (platform == MACOS) {
       try {
         final String td = "processing.core.ThinkDifferent";
         Class<?> thinkDifferent =
@@ -11070,7 +11077,7 @@ public class PApplet implements PConstants {
 
   /** Convenience method, should only be called by PSurface subclasses. */
   static public void hideMenuBar() {
-    if (PApplet.platform == PConstants.MACOSX) {
+    if (PApplet.platform == PConstants.MACOS) {
       // Call some native code to remove the menu bar on OS X. Not necessary
       // on Linux and Windows, who are happy to make full screen windows.
       japplemenubar.JAppleMenuBar.hide();
@@ -12166,11 +12173,11 @@ public class PApplet implements PConstants {
   /**
    * ( begin auto-generated from square.xml )
    *
-   * Draws a square to the screen. A square is a four-sided shape with 
-   * every angle at ninety degrees and each side is the same length. 
-   * By default, the first two parameters set the location of the 
-   * upper-left corner, the third sets the width and height. The way 
-   * these parameters are interpreted, however, may be changed with the 
+   * Draws a square to the screen. A square is a four-sided shape with
+   * every angle at ninety degrees and each side is the same length.
+   * By default, the first two parameters set the location of the
+   * upper-left corner, the third sets the width and height. The way
+   * these parameters are interpreted, however, may be changed with the
    * <b>rectMode()</b> function.
    *
    * ( end auto-generated )
@@ -12279,9 +12286,9 @@ public class PApplet implements PConstants {
   /**
    * ( begin auto-generated from circle.xml )
    *
-   * Draws a circle to the screen. By default, the first two parameters 
-   * set the location of the center, and the third sets the shape's width 
-   * and height. The origin may be changed with the <b>ellipseMode()</b> 
+   * Draws a circle to the screen. By default, the first two parameters
+   * set the location of the center, and the third sets the shape's width
+   * and height. The origin may be changed with the <b>ellipseMode()</b>
    * function.
    *
    * ( end auto-generated )
@@ -12577,17 +12584,17 @@ public class PApplet implements PConstants {
    * ( begin auto-generated from curvePoint.xml )
    *
    * Evalutes the curve at point t for points a, b, c, d. The parameter t
-   * varies between 0 and 1, a and d are points on the curve, and b and c are
-   * the control points. This can be done once with the x coordinates and a
+   * varies between 0 and 1, a and d are the control points, and b and c are
+   * the points on the curve. This can be done once with the x coordinates and a
    * second time with the y coordinates to get the location of a curve at t.
    *
    * ( end auto-generated )
    *
    * @webref shape:curves
-   * @param a coordinate of first point on the curve
-   * @param b coordinate of second point on the curve
-   * @param c coordinate of third point on the curve
-   * @param d coordinate of fourth point on the curve
+   * @param a coordinate of first control point
+   * @param b coordinate of first point on the curve
+   * @param c coordinate of second point on the curve
+   * @param d coordinate of second control point
    * @param t value between 0 and 1
    * @see PGraphics#curve(float, float, float, float, float, float, float, float, float, float, float, float)
    * @see PGraphics#curveVertex(float, float)
@@ -13323,28 +13330,28 @@ public class PApplet implements PConstants {
   /**
    * ( begin auto-generated from push.xml )
    *
-   * The <b>push()</b> function saves the current drawing style 
-   * settings and transformations, while <b>pop()</b> restores these 
-   * settings. Note that these functions are always used together. 
-   * They allow you to change the style and transformation settings 
-   * and later return to what you had. When a new state is started 
-   * with push(), it builds on the current style and transform 
+   * The <b>push()</b> function saves the current drawing style
+   * settings and transformations, while <b>pop()</b> restores these
+   * settings. Note that these functions are always used together.
+   * They allow you to change the style and transformation settings
+   * and later return to what you had. When a new state is started
+   * with push(), it builds on the current style and transform
    * information.<br />
    * <br />
-   * <b>push()</b> stores information related to the current 
-   * transformation state and style settings controlled by the 
-   * following functions: <b>rotate()</b>, <b>translate()</b>, 
-   * <b>scale()</b>, <b>fill()</b>, <b>stroke()</b>, <b>tint()</b>, 
-   * <b>strokeWeight()</b>, <b>strokeCap()</b>, <b>strokeJoin()</b>, 
-   * <b>imageMode()</b>, <b>rectMode()</b>, <b>ellipseMode()</b>, 
-   * <b>colorMode()</b>, <b>textAlign()</b>, <b>textFont()</b>, 
+   * <b>push()</b> stores information related to the current
+   * transformation state and style settings controlled by the
+   * following functions: <b>rotate()</b>, <b>translate()</b>,
+   * <b>scale()</b>, <b>fill()</b>, <b>stroke()</b>, <b>tint()</b>,
+   * <b>strokeWeight()</b>, <b>strokeCap()</b>, <b>strokeJoin()</b>,
+   * <b>imageMode()</b>, <b>rectMode()</b>, <b>ellipseMode()</b>,
+   * <b>colorMode()</b>, <b>textAlign()</b>, <b>textFont()</b>,
    * <b>textMode()</b>, <b>textSize()</b>, <b>textLeading()</b>.<br />
    * <br />
-   * The <b>push()</b> and <b>pop()</b> functions were added with 
-   * Processing 3.5. They can be used in place of <b>pushMatrix()</b>, 
-   * <b>popMatrix()</b>, <b>pushStyles()</b>, and <b>popStyles()</b>. 
-   * The difference is that push() and pop() control both the 
-   * transformations (rotate, scale, translate) and the drawing styles 
+   * The <b>push()</b> and <b>pop()</b> functions were added with
+   * Processing 3.5. They can be used in place of <b>pushMatrix()</b>,
+   * <b>popMatrix()</b>, <b>pushStyles()</b>, and <b>popStyles()</b>.
+   * The difference is that push() and pop() control both the
+   * transformations (rotate, scale, translate) and the drawing styles
    * at the same time.
    *
    * ( end auto-generated )
@@ -13361,28 +13368,28 @@ public class PApplet implements PConstants {
   /**
    * ( begin auto-generated from pop.xml )
    *
-   * The <b>pop()</b> function restores the previous drawing style 
-   * settings and transformations after <b>push()</b> has changed them. 
-   * Note that these functions are always used together. They allow 
-   * you to change the style and transformation settings and later 
-   * return to what you had. When a new state is started with push(), 
+   * The <b>pop()</b> function restores the previous drawing style
+   * settings and transformations after <b>push()</b> has changed them.
+   * Note that these functions are always used together. They allow
+   * you to change the style and transformation settings and later
+   * return to what you had. When a new state is started with push(),
    * it builds on the current style and transform information.<br />
    * <br />
    * <br />
-   * <b>push()</b> stores information related to the current 
-   * transformation state and style settings controlled by the 
-   * following functions: <b>rotate()</b>, <b>translate()</b>, 
-   * <b>scale()</b>, <b>fill()</b>, <b>stroke()</b>, <b>tint()</b>, 
-   * <b>strokeWeight()</b>, <b>strokeCap()</b>, <b>strokeJoin()</b>, 
-   * <b>imageMode()</b>, <b>rectMode()</b>, <b>ellipseMode()</b>, 
-   * <b>colorMode()</b>, <b>textAlign()</b>, <b>textFont()</b>, 
+   * <b>push()</b> stores information related to the current
+   * transformation state and style settings controlled by the
+   * following functions: <b>rotate()</b>, <b>translate()</b>,
+   * <b>scale()</b>, <b>fill()</b>, <b>stroke()</b>, <b>tint()</b>,
+   * <b>strokeWeight()</b>, <b>strokeCap()</b>, <b>strokeJoin()</b>,
+   * <b>imageMode()</b>, <b>rectMode()</b>, <b>ellipseMode()</b>,
+   * <b>colorMode()</b>, <b>textAlign()</b>, <b>textFont()</b>,
    * <b>textMode()</b>, <b>textSize()</b>, <b>textLeading()</b>.<br />
    * <br />
-   * The <b>push()</b> and <b>pop()</b> functions were added with 
-   * Processing 3.5. They can be used in place of <b>pushMatrix()</b>, 
-   * <b>popMatrix()</b>, <b>pushStyles()</b>, and <b>popStyles()</b>. 
-   * The difference is that push() and pop() control both the 
-   * transformations (rotate, scale, translate) and the drawing styles 
+   * The <b>push()</b> and <b>pop()</b> functions were added with
+   * Processing 3.5. They can be used in place of <b>pushMatrix()</b>,
+   * <b>popMatrix()</b>, <b>pushStyles()</b>, and <b>popStyles()</b>.
+   * The difference is that push() and pop() control both the
+   * transformations (rotate, scale, translate) and the drawing styles
    * at the same time.
    *
    * ( end auto-generated )
@@ -14859,6 +14866,8 @@ public class PApplet implements PConstants {
 
 /**
  * gray number specifying value between white and black
+ *
+ * @param gray value between black and white, by default 0 to 255
  */
   public void specular(float gray) {
     if (recorder != null) recorder.specular(gray);
@@ -14924,6 +14933,8 @@ public class PApplet implements PConstants {
 
   /**
    * gray number specifying value between white and black
+   *
+   * @param gray value between black and white, by default 0 to 255
    */
   public void emissive(float gray) {
     if (recorder != null) recorder.emissive(gray);
