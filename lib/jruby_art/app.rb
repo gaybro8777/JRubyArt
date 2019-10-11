@@ -95,8 +95,8 @@ module Processing
       self.class.library_loaded?(library_name)
     end
 
-    # Since processing-3.0 you should prefer setting the sketch width and
-    # height and renderer using the size method in the settings loop of the
+    # Since processing-3.0 you should set the sketch width and height and
+    # renderer using the size method in the settings method of the
     # sketch (as with vanilla processing) but is hidden see created java.
     # Options are no longer relevant, define post_initialize method to use
     # custom options (see Sandi Metz POODR)
@@ -114,7 +114,7 @@ module Processing
         close
       end
       @surface = self.get_surface
-      # NB: this is the processing runSketch() method as used by processing.py
+      # NB: this is the processing runSketch() method
       run_sketch
     end
 

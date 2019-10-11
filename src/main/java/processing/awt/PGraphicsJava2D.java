@@ -24,10 +24,34 @@
 
 package processing.awt;
 
-import java.awt.*;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Composite;
+import java.awt.CompositeContext;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Paint;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.font.TextAttribute;
-import java.awt.geom.*;
-import java.awt.image.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.Raster;
+import java.awt.image.VolatileImage;
+import java.awt.image.WritableRaster;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -256,6 +280,7 @@ public class PGraphicsJava2D extends PGraphics {
   /**
    * Still need a means to get the java.awt.Image object, since getNative()
    * is going to return the {@link Graphics2D} object.
+   * @return 
    */
   @Override
   public Image getImage() {
@@ -263,7 +288,8 @@ public class PGraphicsJava2D extends PGraphics {
   }
 
 
-  /** Returns the java.awt.Graphics2D object used by this renderer. */
+  /** Returns the java.awt.Graphics2D object used by this renderer.
+   * @return  */
   @Override
   public Object getNative() {
     return g2;
@@ -1008,15 +1034,7 @@ public class PGraphicsJava2D extends PGraphics {
       g2.setComposite(defaultComposite);
 
     } else {
-      g2.setComposite(new Composite() {
-
-        @Override
-        public CompositeContext createContext(ColorModel srcColorModel,
-                                              ColorModel dstColorModel,
-                                              RenderingHints hints) {
-          return new BlendingContext(blendMode);
-        }
-      });
+      g2.setComposite((ColorModel srcColorModel, ColorModel dstColorModel, RenderingHints hints1) -> new BlendingContext(blendMode));
     }
   }
 
@@ -1031,8 +1049,10 @@ public class PGraphicsJava2D extends PGraphics {
       this.mode = mode;
     }
 
+    @Override
     public void dispose() { }
 
+    @Override
     public void compose(Raster src, Raster dstIn, WritableRaster dstOut) {
       // not sure if this is really necessary, since we control our buffers
       if (src.getSampleModel().getDataType() != DataBuffer.TYPE_INT ||
@@ -1301,17 +1321,21 @@ public class PGraphicsJava2D extends PGraphics {
     int fillMode = Arc2D.PIE;
     int strokeMode = Arc2D.OPEN;
 
-    if (mode == OPEN) {
-      fillMode = Arc2D.OPEN;
-      //strokeMode = Arc2D.OPEN;
-
-    } else if (mode == PIE) {
-      //fillMode = Arc2D.PIE;
-      strokeMode = Arc2D.PIE;
-
-    } else if (mode == CHORD) {
-      fillMode = Arc2D.CHORD;
-      strokeMode = Arc2D.CHORD;
+    switch (mode) {
+      case OPEN:
+        fillMode = Arc2D.OPEN;
+        //strokeMode = Arc2D.OPEN;
+        break;
+      case PIE:
+        //fillMode = Arc2D.PIE;
+        strokeMode = Arc2D.PIE;
+        break;
+      case CHORD:
+        fillMode = Arc2D.CHORD;
+        strokeMode = Arc2D.CHORD;
+        break;
+      default:
+        break;
     }
 
     if (fill) {
@@ -1745,38 +1769,41 @@ public class PGraphicsJava2D extends PGraphics {
           } else {
             int index = 0;
             for (int y = 0; y < source.pixelHeight; y++) {
-              if (source.format == RGB) {
-                int alpha = tintColor & 0xFF000000;
-                for (int x = 0; x < source.pixelWidth; x++) {
-                  int argb1 = source.pixels[index++];
-                  int r1 = (argb1 >> 16) & 0xff;
-                  int g1 = (argb1 >> 8) & 0xff;
-                  int b1 = (argb1) & 0xff;
-                  tintedTemp[x] = alpha |
+              switch (source.format) {
+                case RGB:
+                  int alpha = tintColor & 0xFF000000;
+                  for (int x = 0; x < source.pixelWidth; x++) {
+                    int argb1 = source.pixels[index++];
+                    int r1 = (argb1 >> 16) & 0xff;
+                    int g1 = (argb1 >> 8) & 0xff;
+                    int b1 = (argb1) & 0xff;
+                    tintedTemp[x] = alpha |
                       (((r2 * r1) & 0xff00) << 8) |
                       ((g2 * g1) & 0xff00) |
                       (((b2 * b1) & 0xff00) >> 8);
-                }
-              } else if (source.format == ARGB) {
-                for (int x = 0; x < source.pixelWidth; x++) {
-                  int argb1 = source.pixels[index++];
-                  int a1 = (argb1 >> 24) & 0xff;
-                  int r1 = (argb1 >> 16) & 0xff;
-                  int g1 = (argb1 >> 8) & 0xff;
-                  int b1 = (argb1) & 0xff;
-                  tintedTemp[x] =
+                  } break;
+                case ARGB:
+                  for (int x = 0; x < source.pixelWidth; x++) {
+                    int argb1 = source.pixels[index++];
+                    int a1 = (argb1 >> 24) & 0xff;
+                    int r1 = (argb1 >> 16) & 0xff;
+                    int g1 = (argb1 >> 8) & 0xff;
+                    int b1 = (argb1) & 0xff;
+                    tintedTemp[x] =
                       (((a2 * a1) & 0xff00) << 16) |
                       (((r2 * r1) & 0xff00) << 8) |
                       ((g2 * g1) & 0xff00) |
                       (((b2 * b1) & 0xff00) >> 8);
-                }
-              } else if (source.format == ALPHA) {
-                int lower = tintColor & 0xFFFFFF;
-                for (int x = 0; x < source.pixelWidth; x++) {
-                  int a1 = source.pixels[index++];
-                  tintedTemp[x] =
+                  } break;
+                case ALPHA:
+                  int lower = tintColor & 0xFFFFFF;
+                  for (int x = 0; x < source.pixelWidth; x++) {
+                    int a1 = source.pixels[index++];
+                    tintedTemp[x] =
                       (((a2 * a1) & 0xff00) << 16) | lower;
-                }
+                  } break;
+                default:
+                  break;
               }
               wr.setDataElements(0, y, source.pixelWidth, 1, tintedTemp);
             }
@@ -1913,7 +1940,7 @@ public class PGraphicsJava2D extends PGraphics {
 
   /**
    * Same as parent, but override for native version of the font.
-   * <p/>
+   * 
    * Called from textFontImpl and textSizeImpl, so the metrics
    * will get recorded properly.
    */
